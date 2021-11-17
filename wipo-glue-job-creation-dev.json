@@ -1,0 +1,107 @@
+{
+    "Description": "AWS Glue Job does read file from s3 raw bucket and write into s3 curated bucket",
+    "Parameters": {
+        "RawBucketName": {
+            "Type": "String",
+            "MinLength": "10",
+            "Default": "new-raw-bucket-new"
+        },
+        "GlueJobName": {
+            "Type": "String",
+            "MinLength": "10",
+            "Default": "Glue-job-rawtocurated"
+        },
+        "CFNScriptBucketLocation": {
+            "Type": "String",
+            "Description": "S3 Bucket Name where script resides",
+            "Default": "wipo-dev-raw"
+        },
+        "ETLScriptFolderLocation": {
+            "Type": "String",
+            "Description": "Folder Location of the Glue job ETL scripts in S3",
+            "Default": "python"
+        },
+        "ETLScripName": {
+            "Type": "String",
+            "Description": "Enter the Name of the File which is run in the job",
+            "Default": "test.py"
+        },
+        "OutputBucketLocation": {
+            "Type": "String",
+            "Description": "S3 Bucket Name where script resides",
+            "Default": "wipo-dev-raw"
+        },
+        "OutputFolderLocation": {
+            "Type": "String",
+            "Description": "Folder Location of the Glue  of s3 bucket",
+            "Default": "output"
+        }
+    },
+    "Resources": {
+        "GlueRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "glue.amazonaws.com",
+                                    "s3.amazonaws.com"
+                                ]
+                            },
+                            "Action": [
+                                "sts:AssumeRole"
+                            ]
+                        }
+                    ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyName": "root",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": "*",
+                                    "Resource": "*"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "GlueJob": {
+            "Type": "AWS::Glue::Job",
+            "Properties": {
+                "Command": {
+                    "Name": "glueetl",
+                    "ScriptLocation": {
+                        "Fn::Sub": "s3://${CFNScriptBucketLocation}/${ETLScriptFolderLocation}/${ETLScripName}"
+                    }
+                },
+                "DefaultArguments": {
+                    "--job-bookmark-option": "job-bookmark-enable",
+                    "--s3_output_path": {
+                        "Fn::Sub": "s3://${OutputBucketLocation}/${OutputFolderLocation}"
+                    }
+                },
+                "ExecutionProperty": {
+                    "MaxConcurrentRuns": 2
+                },
+                "MaxRetries": 0,
+                "Name": {
+                    "Ref": "GlueJobName"
+                },
+                "Role": {
+                    "Ref": "GlueRole"
+                }
+            }
+        }
+    }
+}
