@@ -1,5 +1,5 @@
 {
-    "Description": "AWS Glue Job reads file from s3 raw bucket and write into s3 curated buckets",
+    "Description": "AWS Glue Job reads file from s3 raw bucket and write into s3 curated bucketsss",
     "Parameters": {
         "RawBucketName": {
             "Type": "String",
